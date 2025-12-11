@@ -2,20 +2,20 @@ FROM node:alpine3.20
 
 WORKDIR /tmp
 
-# 1. 为了利用缓存，先只复制 package 文件
-COPY package*.json ./
-
-# 安装依赖
-RUN apk update && apk upgrade &&\
-    apk add --no-cache openssl curl gcompat iproute2 coreutils bash &&\
-    npm install
-
-# 2. 再复制其余代码
 COPY . .
 
 EXPOSE 3000/tcp
 
-# 【关键步骤】添加这行来查看构建后的目录结构，看看 index.js 到底在不在
-RUN ls -la /tmp
+RUN apk update && apk upgrade &&\
+    apk add --no-cache openssl curl gcompat iproute2 coreutils &&\
+    apk add --no-cache bash &&\
+    chmod +x index.js &&\
+    npm install
 
-CMD ["node", "index.js"]
+# === 关键修改 ===
+# 这行命令的意思是：
+# 1. 启动 shell
+# 2. 打印 "我想看看 /tmp 里到底有什么"
+# 3. 列出当前目录 (/tmp) 下的所有文件 (ls -la)
+# 4. 尝试运行 node index.js
+CMD ["sh", "-c", "echo 'CHECKING FILES IN /tmp:' && ls -la /tmp && node index.js"]
